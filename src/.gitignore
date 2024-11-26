@@ -1,0 +1,7 @@
+*.log
+*.cmake
+*.d
+*.o
+*.make
+*.xml
+*.cbp
