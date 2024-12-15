@@ -36,7 +36,7 @@ vector<vector<int>> distribute_group(int bin_num) {
     }
 
     PyRun_SimpleString("import sys");
-    string path = "sys.path.append('"+ cpOur.PATH_PREFIX + "/')";
+    // string path = "sys.path.append('"+ cpOur.PATH_PREFIX + "/')";
     string path = "sys.path.append('../')";
 
     cout << "Python file path = " << path << endl;
@@ -353,17 +353,17 @@ void OurScheme::CorrelationAnalysis(const int& day) {
 
             int rst = ftable.find(loc1, loc2);
 
-            if(rst != 0) {
+            //if(rst != 0) {
                 ftable.add(loc1, loc2);
                 ftable.add(loc1, loc2);
-            } else {
-                auto index = flist.insert(ListNode(loc1, loc2));
-                if(flist.isHot(index)) {
-                    ftable.add(index->first, index->second);
-                    ftable.add(index->first, index->second);
-                    flist.del(index);
-                }
-            }
+            // } else {
+            //     auto index = flist.insert(ListNode(loc1, loc2));
+            //     if(flist.isHot(index)) {
+            //         ftable.add(index->first, index->second);
+            //         ftable.add(index->first, index->second);
+            //         flist.del(index);
+            //     }
+            // }
 
         }
 
