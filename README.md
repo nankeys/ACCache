@@ -15,7 +15,7 @@ The tester is required to manually modify and update certain scripts and source 
 ## Build
 ```shell
 git clone https://github.com/nankeys/AC-Cache.git
-cd CorrelationAnalysis && mkdir _build && cd _build
+cd src && mkdir _build && cd _build
 cmake ..
 make -j
 ```
@@ -28,7 +28,12 @@ make -j
     + `kvcache/202206`: `aws s3 cp --no-sign-request --recursive s3://cachelib-workload-sharing/pub/kvcache/202206/ ./`
     + `kvcache/202401`: `aws s3 cp --no-sign-request --recursive s3://cachelib-workload-sharing/pub/kvcache/202401/ ./`
 
+
 ### Preprocess
+```shell
+# All the steps work under directory `Preproccess/`
+# Please change the path of workload used in the python file(i.e. `stats.py`)
+```
 1. Uncompress the trace, for example
 ```shell
 zstd -d cluster2.sort.zst
@@ -40,24 +45,24 @@ python3 split_in_days.py
 ```
 3. Generate the stat file
 ```shell
-# change the workload name and stat name in 02.stats.py
-python3 02.stats.py
+# change the traceno in stats.py
+python3 stats.py
 ```
 4. Split the traces in threads
 ```shell
-# change the traceno in 03.thread_split.py
-python3 03.thread_split.py
+# change the traceno in thread_split.py
+python3 thread_split.py
 ```
 5. For each trace, extract the position of hot objects
 ```shell
-# change the information in advance
+# change the traceno in FreqExtraction.py
 python3 FreqExtraction.py
 ```
-6. Put the informaion into `parameter.h`. Put the variations into `flimit`.
-7. Change the information in `config.json`.
+6. Put the informaion into `parameter.h`. Put the variations into `variation`.
+7. Change the information in `src/config.json`.
 
 ## Correalation Analysis
-1. Change the information in main_correlation.cpp
+1. Change the information in `main_correlation.cpp`
 2. Change the dir and rebuild
 ```shell
 cd _build
@@ -80,18 +85,20 @@ make
 ```shell
 wget https://master.dl.sourceforge.net/project/louvain/louvain-generic.tar.gz?viasf=1
 tar -zvxf louvain-generic.tar.gz
+cd louvain-generic/
 make
 ```
 
 2. Generate initial groups
 ```shell
+cd GroupDivision/
 bash initial.sh
 ```
 
 3. merge the group
 ```shell
 # change the infromation of trace
-python3 merge.py
+python3 merge_discrete_file.py
 ```
 
 4. Execute Algorithm 1: Partition correlation graph
