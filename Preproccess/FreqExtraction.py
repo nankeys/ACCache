@@ -6,7 +6,7 @@ import sys
 #
 # pathprefix = "/home/flnan/twitter"# "/data/kvcache%d" % traceno
 traceno = int(input("please input the trace No. you want to process.\n"))
-statfile = input("please input the /path/to/stat%02d\n" % traceno)
+statfile = input("please input the /path/to/stat%02d. please include the stat%02d file in the path.\n" % (traceno, traceno))
 
 with open(statfile, 'r') as f:
     contents = f.readlines()
