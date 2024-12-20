@@ -28,48 +28,49 @@ make -j
     + `kvcache/202206`: `aws s3 cp --no-sign-request --recursive s3://cachelib-workload-sharing/pub/kvcache/202206/ ./`
     + `kvcache/202401`: `aws s3 cp --no-sign-request --recursive s3://cachelib-workload-sharing/pub/kvcache/202401/ ./`
 
+### Uncompress
+Uncompress the trace, for example
+```shell
+cd /path/to/cluster02.sort.zst
+zstd -d cluster02.sort.zst
+```
+
+**Notice**: The path to store the trace should be carefully selected with enough disk space. And all intermediate generated files will be stored under this path. Please remember this `path` for further usage.
+
+### Information Collection
+At first, the scheme will collect some informations about this test. You can select the item you want to change. You can re-run this script at any time you want to change the configure files.
+```shell
+python3 InformationCollection.py
+```
+**Notice**: You will go back many times as you want to change the parameters. The specific parameters should be changed before your test.
 
 ### Preprocess
 ```shell
 # All the steps work under directory `Preproccess/`
-# Please change the path of workload used in the python file(i.e. `stats.py`)
+cd Preprocess
 ```
-1. Uncompress the trace, for example
+
+1. Pre-process the trace files.
 ```shell
-zstd -d cluster2.sort.zst
+# change the fname in preprocess.py
+python3 preprocess.py
 ```
-2. Split the trace in days
-```shell
-# change the fname in split_in_days.py
-python3 split_in_days.py
-```
-3. Generate the stat file
-```shell
-# change the traceno in stats.py
-python3 stats.py
-```
-4. Split the traces in threads
+
+3. Split the traces of specific day into threads
 ```shell
 # change the traceno in thread_split.py
 python3 thread_split.py
 ```
-5. For each trace, extract the position of hot objects
-```shell
-# change the traceno in FreqExtraction.py
-python3 FreqExtraction.py
-```
-6. Put the informaion into `parameter.h`. Put the variations into `variation`.
-7. Change the information in `src/config.json`.
 
 ## Correalation Analysis
-1. Change the information in `main_correlation.cpp`
-2. Change the dir and rebuild
+1. Change the dir and rebuild
 ```shell
-cd _build
+cd src/_build
 make -j
 ```
-3. Run `correlation` to generate the correlation graph.
-**Note**: the generation of the correlation graph could take a long time. It will generate a file whose name is `louvaion_node_{trace_no}_{flimit}`
+
+2. Run `correlation` to generate the correlation graph.
+**Note**: the generation of the correlation graph could take a long time. It will generate a file whose name is `louvaion{trace_no}`
 ```shell
 ./correlation
 ```
@@ -89,54 +90,26 @@ cd louvain-generic/
 make
 ```
 
-2. Generate initial groups
+2.  Generate the graph file of the CGroup under the `path`. Please provide the path to directory `louvain-generic`.
 ```shell
-cd GroupDivision/
-bash initial.sh
+cd ACCache/
+python3 GroupDivision.py
 ```
-
-3. merge the group
-```shell
-# change the infromation of trace
-python3 merge_discrete_file.py
-```
-
-4. Execute Algorithm 1: Partition correlation graph
-```shell
-python3 divided_graph.py
-```
-
-5. Then we get the graph file of the CGroups.
 
 ## Objects Distribution
-1. Put the generated information of CGroups to `parameter.h`.
-2. Set up the experiments you want to test and changes the variation in `cache.h`.
-3. Setup the `Memcached` Nodes.
-4. Record information of `Memcached` nodes to `config.json`.
-```json
-"server_info": [
-    {
-      "ip": "172.18.96.10",
-      "port": 11211
-    },{
-      "ip": "172.18.96.11",
-      "port": 11211
-    }
-]
-```
-5. Change the dir and rebuild
+1. Change the dir and rebuild
 ```shell
-cd _build
+cd ACCache/src/_build
 make -j
 ```
-6. Run the executable file
+2. Run the executable file
 ``` shell
 ./CorAna
 ```
-7. The result will be write to `result.txt`.
+3. The result will be write to `result.txt`.
 
 ## Various evaluations
-To adopt to a new evaluation, one should change the file `config.h` to get the parameter from the self-defined source file but not the `config.json`.
+To adopt to a new evaluation, one should re-run `InformationCollection` to change the parameter.
 
 ## Plot
 All the scripts for ploting the graph is under directory `plot`.

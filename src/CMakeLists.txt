@@ -23,7 +23,6 @@ set(OTHERS
         ./ErasureCode/ErasureCode.h
         ./MemcachedClient.cpp
         ./MemcachedClient.h
-        ./parameter.h
         )
 set(OUR_SCHEME
         OurScheme.cpp

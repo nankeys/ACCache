@@ -16,7 +16,7 @@ int server_num = 0;
 
 void random_read_file(const workload_type& type, const int& snum) {
     wt =type;
-    cp = ConfigParameter(type, snum);
+    cp = ConfigParameter(type);
     keys = readStat(cp.PATH_PREFIX + "/" + cp.STAT_FILE);
 }
 
@@ -179,7 +179,7 @@ void *ibm_query_exec(void *param) {
 
 void random_test(const workload_type& type, const int& snum) {
     wt = type;
-    cp = ConfigParameter(type, snum);
+    cp = ConfigParameter(type);
 
     //cout << "11111111111111111" << endl;
     //random_read_file();

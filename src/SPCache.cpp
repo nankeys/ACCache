@@ -18,9 +18,9 @@ namespace SPCache {
     void initial(workload_type wt, const int& snum) {
         wtype = wt;
         if(wtype == twitter) {
-            cp = ConfigParameter(twitter, snum);
+            cp = ConfigParameter(twitter);
         } else {
-            cp = ConfigParameter(ibm, snum);
+            cp = ConfigParameter(meta);
         }
 
         ukeys = readStat(cp.PATH_PREFIX + "/" + cp.STAT_FILE);
@@ -180,7 +180,7 @@ namespace SPCache {
     static void *ibm_query_exec(void *param) {}
 
     void test(const int& snum) {
-        cp = ConfigParameter(twitter, snum);
+        cp = ConfigParameter(twitter);
         pthread_t threads[cp.THREAD_NUM];
         pthread_attr_t attr;
         pthread_attr_init(&attr);

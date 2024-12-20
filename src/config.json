@@ -1,113 +1,104 @@
 {
   "twitter": {
-    "trace_no": 99,
-    "stat_file" : "stat99",
     "stream_file_prefix": "workload",
-    "path_prefix": "/home/flnan/twitter",
-    "freq_list_size": 12000,
-    "day": 0,
-    "day_num": 7,
-    "window_size": 100,
-    "hotest_freq_limit": 42,
-    "cmsketch_deviation": 5000,
-    "freq_limit": 812,
-    "once_read_num": 1000000,
-    "latency_num": 800000,
-    "low_limit": 1048576,
-    "server_num": 6
+    "day_num": 7
   },
   "meta": {
-    "trace_no": 202206,
-    "stat_file" : "stat",
     "stream_file_prefix": "kvcache_traces_",
-    "path_prefix": "/data/kvcache",
-    "freq_list_size": 12000,
-    "day": 0,
-    "day_num": 5,
-    "window_size": 100,
-    "hotest_freq_limit": 403,
-    "cmsketch_deviation": 5000,
-    "freq_limit": 812,
-    "once_read_num": 1000000,
-    "latency_num": 800000,
-    "low_limit": 1048576,
-    "server_num": 6
+    "day_num": 5
   },
-  "ibm": {
-    "stat_file": "stat01",
-    "stream_file_prefix": "work_cluster",
-    "path_prefix": "/home/flnan/ibm",
-    "freq_list_size": 12000,
-    "day_num": 7,
-    "window_size": 100,
-    "hotest_freq_limit": 10,
-    "cmsketch_deviation": 900,
-    "freq_limit": 2,
-    "once_read_num": 10000,
-    "latency_num": 10000,
-    "low_limit": 1048576,
-    "server_num": 13
-  },
-  "ec_n" : 5,
-  "ec_k" : 3,
-  "thread_num" : 128,
-  "chunk_size" : 4096,
+  "trace_type": "twitter",
+  "path_prefix": "/home/flnan/twitter",
+  "trace_no": 99,
+  "stat_file": "stat99",
+  "window_size": 100,
+  "server_num": 6,
+  "day": 0,
+  "hotest_freq_limit": 42,
+  "group_num" : 122,
+  "freq_list_size": 12000,
+  "cmsketch_deviation": 5000,
+  "once_read_num": 1000000,
+  "latency_num": 800000,
+  "low_limit": 1048576,
+  "ec_n": 5,
+  "ec_k": 3,
+  "thread_num": 128,
+  "chunk_size": 4096,
   "server_info": [
     {
       "ip": "10.26.43.54",
       "port": 11211
-    },{
+    },
+    {
       "ip": "10.26.43.54",
       "port": 11212
-    },{
+    },
+    {
       "ip": "10.26.43.54",
       "port": 11213
-    },{
+    },
+    {
       "ip": "10.26.43.54",
       "port": 11214
-    },{
+    },
+    {
       "ip": "10.26.43.54",
       "port": 11215
-    },{
+    },
+    {
       "ip": "10.26.43.54",
       "port": 11216
-    },{
+    },
+    {
       "ip": "172.18.96.16",
       "port": 11211
-    },{
+    },
+    {
       "ip": "172.18.96.17",
       "port": 11211
-    },{
+    },
+    {
       "ip": "172.18.96.18",
       "port": 11211
-    },{
+    },
+    {
       "ip": "172.18.96.19",
       "port": 11211
-    },{
+    },
+    {
       "ip": "172.18.96.20",
       "port": 11211
-    },{
+    },
+    {
       "ip": "172.18.96.21",
       "port": 11211
-    },{
+    },
+    {
       "ip": "172.18.96.22",
       "port": 11211
-    },{
+    },
+    {
       "ip": "172.18.96.23",
       "port": 11211
-    },{
+    },
+    {
       "ip": "172.18.96.24",
       "port": 11211
-    },{
+    },
+    {
       "ip": "172.18.96.25",
       "port": 11211
-    },{
+    },
+    {
       "ip": "172.18.96.26",
       "port": 11211
-    },{
+    },
+    {
       "ip": "172.18.96.27",
       "port": 11211
-    },{
+    },
+    {
       "ip": "172.18.96.28",
       "port": 11211
     }

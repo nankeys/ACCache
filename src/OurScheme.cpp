@@ -117,7 +117,7 @@ void OurScheme::getFreqKeys(const string &stats_file) {
 
     cout << "NUmber of hot keys = " << freq_limit_pos - okeys.begin() << endl;
 
-    ofstream fout(fmt::format("freqkeys{:02d}_{}", cpOur.TRACE_NO, cpOur.WINDOW_SIZE), ios::out);
+    ofstream fout(fmt::format("{}/freqkeys{:02d}_{}", cpOur.PATH_PREFIX, cpOur.TRACE_NO, cpOur.WINDOW_SIZE), ios::out);
     if(!fout.is_open()) {
         cout << "Error opening file to write freqkeys." << endl;
         exit(-1);
@@ -245,13 +245,13 @@ vector<int>* OurScheme::group_stat(const string& filename, const int& group_num)
     return groups;
 }
 
-OurScheme::OurScheme(enum workload_type wt, const int& trace_no, const int& hotlim, const int& snum)
+OurScheme::OurScheme(enum workload_type wt)
 {
     string stat_file;
 
     this->wtype = wt;
 
-    cpOur = ConfigParameter(wt, trace_no, hotlim, snum);
+    cpOur = ConfigParameter(wt);
     total_freq = 0;
     cout << "Hot objects frequent limit = " << cpOur.HOTEST_FREQ_LIMIT << endl;
 
@@ -268,8 +268,8 @@ OurScheme::OurScheme(enum workload_type wt, const int& trace_no, const int& hotl
 
 }
 
-void OurScheme::CorrelationAnalysis(const int& day) {
-    FreqList flist(cpOur.FREQ_LIST_SIZE, cpOur.FREQ_LIMIT);
+void OurScheme::CorrelationAnalysis() {
+    FreqList flist(cpOur.FREQ_LIST_SIZE, cpOur.HOTEST_FREQ_LIMIT);
     //CMSketch ftable();
 
     long long current_pos = 0;
@@ -277,7 +277,7 @@ void OurScheme::CorrelationAnalysis(const int& day) {
     int flag = 0;
     timeit t;
 
-    string workload_file = cpOur.PATH_PREFIX+ "/" + cpOur.STREAM_FILE_PREFIX + to_string(day + 1);
+    string workload_file = cpOur.PATH_PREFIX+ "/" + cpOur.STREAM_FILE_PREFIX + to_string(cpOur.TRACE_NO) + "_" + to_string(cpOur.DAY);
 
     cout << "workload_file = " << workload_file << endl;
     // get the tail position of the file
@@ -380,7 +380,7 @@ void OurScheme::CorrelationAnalysis(const int& day) {
     //delete rstream;
     cout << "Current point position = " << current_pos << endl;
     flist.clear();
-    ftable.write4louvain(fmt::format("{}/louvain_node_{}_{}", cpOur.PATH_PREFIX, cpOur.TRACE_NO, cpOur.variation));
+    ftable.write4louvain(fmt::format("{}/louvain{}", cpOur.PATH_PREFIX, cpOur.TRACE_NO));
 }
 
 void OurScheme::test() {
@@ -758,7 +758,7 @@ void *twitter_query_exec(void *param) {
                 ((thread_param *) param)->latency.push(tt.passedtime() / sops);
                 //((thread_param *) param)->latency.push(tt.passedtime());
                 if (((thread_param *) param)->latency.size() >= cpOur.LATENCY_NUM) {
-                    ((thread_param *) param)->latency.pop();
+                    ((thread_param *) param)->latency.pop(); 
                 }
             }
             //total running time

@@ -3,9 +3,9 @@
 #include "MemcachedClient.h"
 #include "OurScheme.h"
 
-int main() {
-    ConfigParameter gcp(twitter);
-    OurScheme os(twitter);
+int main() {{
+    ConfigParameter gcp({0});
+    OurScheme os({0});
     os.CorrelationAnalysis();
     return 0;
-}
+}}

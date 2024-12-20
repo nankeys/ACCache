@@ -27,8 +27,8 @@ public:
     FreqTable ftable;
 
 public:
-    explicit OurScheme(enum workload_type wt = twitter, const int& trace_no = 2, const int& hotlim = 3444, const int& snum = 9);
-    void CorrelationAnalysis(const int& day = 0);
+    explicit OurScheme(enum workload_type wt = twitter);
+    void CorrelationAnalysis();
     void distribute(const string& group_file, const int& group_num, const int& node_num);
     //void MemcachedInit();
     void query();
