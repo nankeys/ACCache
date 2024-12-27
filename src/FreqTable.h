@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <string>
+#include "buffer.h"
 using namespace std;
 
 class FreqTable {

@@ -14,7 +14,7 @@ def read_json_file(file_path):
     return data
 
 if __name__ == '__main__':
-    config_file = 'src/config.json'
+    config_file = './src/config.json'
     
     print("="*50)
     print("Config Information Modification\n".center(50))
@@ -43,6 +43,7 @@ if __name__ == '__main__':
     elif(choice == 2):
         traceno = int(get_input('The Trace No. you want to test.', data["trace_no"]))
         data["trace_no"] = traceno
+        data['stat_file'] = "stat{}".format(traceno)
     elif(choice == 3):
         path = get_input('The path to intermediate files.', data["path_prefix"])
         data["path_prefix"] = path
@@ -71,6 +72,6 @@ if __name__ == '__main__':
             data["server_info"].append(tmp)
             
     if(choice != 0):
-        data = read_json_file(config_file)
+        # data = read_json_file(config_file)
         with open(config_file, "w") as json_file:
             json.dump(data, json_file)

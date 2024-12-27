@@ -173,7 +173,7 @@ public:
         if(reader.parse(in, root)) {
             switch (wt) {
                 case twitter:
-                    this->STREAM_FILE_PREFIX= "workload"+fmt::format("{:02d}_", this->TRACE_NO);
+                    this->STREAM_FILE_PREFIX= "workload";
                     this->DAY_NUM = root["twitter"]["day_num"].asInt();                   
                     break;
                 case meta:

@@ -129,7 +129,7 @@ def read_json_file(file_path):
     return data
         
 def update_content(config_file, trace_type, hotlim):
-    with open('../src/correltion.ori', 'r') as f:
+    with open('../src/correlation.ori', 'r') as f:
         content = f.read()
         
     content = content.format(trace_type)

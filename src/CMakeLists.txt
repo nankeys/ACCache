@@ -19,6 +19,7 @@ set(CORRELATION
 set(OTHERS
         ./config.h
         ./toolbox.h
+        ./buffer.h
         ./ErasureCode/ErasureCode.cpp
         ./ErasureCode/ErasureCode.h
         ./MemcachedClient.cpp

@@ -18,7 +18,7 @@ def read_json_file(file_path):
 
 class GroupDivision:
     def __init__(self):
-        self.config_file = '../src/config.json'
+        self.config_file = 'src/config.json'
         self.data = read_json_file(self.config_file)
         self.traceno = self.data["trace_no"]
         self.filepath = self.data["path_prefix"]
@@ -30,13 +30,13 @@ class GroupDivision:
             exit(-1)
             
         freqkeys_file = "freqkeys{:02d}".format(self.traceno)
-        with open(self.filepath/freqkeys_file, 'r') as fin:
+        with open(self.filepath + "/" + freqkeys_file, 'r') as fin:
             self.freqkeys = fin.readlines()
         for i in range(len(self.freqkeys)):
             self.freqkeys[i] = self.freqkeys[i].strip()
             
         stat_file = "stat{}".format(self.traceno)
-        with open(stat_file, 'r') as fin:
+        with open(self.filepath + "/" + stat_file, 'r') as fin:
             keystat = fin.readlines()
         self.key_info = dict()
         self.tsize = 0
@@ -44,23 +44,25 @@ class GroupDivision:
         for info in keystat:
             key, size, freq = info.strip().split("\t")
             self.key_info[key] = (int(size), int(freq))
-            self.tsize += int(size)
-            self.tfreq += int(freq)
+            
+        for fkey in self.freqkeys:
+            self.tsize += self.key_info[fkey][0]
+            self.tfreq += self.key_info[fkey][1]
             
     def graph2group(self, is_sub:bool, subno:int):
-        if(is_sub):
-            status = os.system("{0}/louvain-genetic/convert -i {1}/louvain{2} -o {1}/graph{2}.b -w {1}/graph{2}.w".format(self.execpath, self.filepath, self.traceno))
+        if(is_sub == False):
+            status = os.system("{0}/louvain-generic/convert -i {1}/louvain{2} -o {1}/graph{2}.b -w {1}/graph{2}.w".format(self.execpath, self.filepath, self.traceno))
             time.sleep(1)
-            status = os.system("{0}/louvain-genetic/louvain {1}/graph{2}.b -l -1 -q id_qual -w {1}/graph{2}.w > {1}/graph{2}.t".format(self.execpath, self.filepath, self.traceno))
+            status = os.system("{0}/louvain-generic/louvain {1}/graph{2}.b -l -1 -q id_qual -w {1}/graph{2}.w > {1}/graph{2}.t".format(self.execpath, self.filepath, self.traceno))
             time.sleep(1)
-            status = os.system("{0}/louvain-genetic/hierarchy {1}/graph{2}.t -m > {1}/graph{2}".format(self.execpath, self.filepath, self.traceno))
+            status = os.system("{0}/louvain-generic/hierarchy {1}/graph{2}.t -m > {1}/graph{2}".format(self.execpath, self.filepath, self.traceno))
             time.sleep(1)
         else:
-            status = os.system("{0}/louvain-genetic/convert -i {1}/louvain{2}_{3} -o {1}/graph{2}_{3}.b -w {1}/graph{2}_{3}.w".format(self.execpath, self.filepath, self.traceno, subno))
+            status = os.system("{0}/louvain-generic/convert -i {1}/louvain{2}_{3} -o {1}/graph{2}_{3}.b -w {1}/graph{2}_{3}.w".format(self.execpath, self.filepath, self.traceno, subno))
             time.sleep(1)
-            status = os.system("{0}/louvain-genetic/louvain {1}/graph{2}_{3}.b -l -1 -q id_qual -w {1}/graph{2}_{3}.w > {1}/graph{2}_{3}.t".format(self.execpath, self.filepath, self.traceno, subno))
+            status = os.system("{0}/louvain-generic/louvain {1}/graph{2}_{3}.b -l -1 -q id_qual -w {1}/graph{2}_{3}.w > {1}/graph{2}_{3}.t".format(self.execpath, self.filepath, self.traceno, subno))
             time.sleep(1)
-            status = os.system("{0}/louvain-genetic/hierarchy {1}/graph{2}_{3}.t -m > {1}/graph{2}_{3}".format(self.execpath, self.filepath, self.traceno, subno))
+            status = os.system("{0}/louvain-generic/hierarchy {1}/graph{2}_{3}.t -m > {1}/graph{2}_{3}".format(self.execpath, self.filepath, self.traceno, subno))
             time.sleep(1)
         
     def merge_group(self, subno: int, is_sub = True):
@@ -73,9 +75,10 @@ class GroupDivision:
         else:
             self.gprefix = "graph{}".format(self.traceno)
         group_file = self.gprefix
+        print("group_file =", group_file)
 
         if is_subgraph:
-            with open("{}/{}".format(self.filepath, group_file), 'r') as fin:
+            with open("{}/{}".format(self.filepath, self.parent_graph), 'r') as fin:
                 pcnts = fin.readlines()
 
             pgroups = list()
@@ -235,7 +238,7 @@ class GroupDivision:
                     print(i, freq_stat[i])
                     divided_group.append(i)
                     g = set(groups[i])
-                    with open("{}/louvain{}_{}".format(self.filepath, self.traceno, i), 'w') as fout, open("louvain{}".format(self.traceno), 'r') as fin:
+                    with open("{}/louvain{}_{}".format(self.filepath, self.traceno, i), 'w') as fout, open("{}/louvain{}".format(self.filepath, self.traceno), 'r') as fin:
                         line = fin.readline()
                         while line != "":
                             first, second, tmp = line.strip().split('\t')
@@ -274,31 +277,68 @@ class GroupDivision:
         with open("{}/{}".format(self.filepath, self.parent_graph), 'r') as fin:
             line_count = len(fin.readlines())
 
+        print("line_count =",line_count)
         self.group_num = int(line_count/2)
+        return self.group_num
         
     def clean_files(self):
         self.data["group_num"] = gd.get_group_num()
         with open(self.config_file, "w") as json_file:
             json.dump(self.data, json_file)
             
-        os.remove("{}/louvain{}".format(self.filepath, self.trace_no))
-        os.remove("{}/louvain{}_*".format(self.filepath, self.trace_no))
-        os.remove("{}/*.b".format(self.filepath, self.trace_no))
-        os.remove("{}/*.w".format(self.filepath, self.trace_no))
-        os.remove("{}/*.t".format(self.filepath, self.trace_no))
-        os.remove("{}/graph{}_*".format(self.filepath, self.trace_no))
+        # os.remove("{}/louvain{}".format(self.filepath, self.traceno))
+        delete_files_with_prefix_or_suffix(self.filepath, prefix="louvain{}_".format(self.traceno))
+        delete_files_with_prefix_or_suffix(self.filepath, suffix=".b")
+        delete_files_with_prefix_or_suffix(self.filepath, suffix=".w")
+        delete_files_with_prefix_or_suffix(self.filepath, suffix=".t")
+        # delete_files_with_prefix_or_suffix(self.filepath, prefix="graph{}_*".format(self.traceno))
+        # os.remove("{}/louvain{}_*".format(self.filepath, self.traceno))
+        # os.remove("{}/*.b".format(self.filepath, self.traceno))
+        # os.remove("{}/*.w".format(self.filepath, self.traceno))
+        # os.remove("{}/*.t".format(self.filepath, self.traceno))
+        # os.remove("{}/graph{}_*".format(self.filepath, self.traceno))
         
-        
+def delete_files_with_prefix_or_suffix(directory, prefix=None, suffix=None):
+    """
+    Delete files with a specific prefix or suffix in the specified directory.
+    
+    :param directory: Path to the target directory
+    :param prefix: File name prefix (optional)
+    :param suffix: File name suffix (optional)
+    """
+    if not os.path.exists(directory):
+        print(f"The directory {directory} does not exist!")
+        return
+
+    if not os.path.isdir(directory):
+        print(f"{directory} is not a directory!")
+        return
+
+    try:
+        # Iterate through all files in the directory
+        for filename in os.listdir(directory):
+            file_path = os.path.join(directory, filename)
+            # Check if the file matches the prefix or suffix and is a file
+            if os.path.isfile(file_path) and (
+                (prefix and filename.startswith(prefix)) or
+                (suffix and filename.endswith(suffix))
+            ):
+                os.remove(file_path)  # Delete the file
+                print(f"Deleted file: {file_path}")
+    except Exception as e:
+        print(f"Error while deleting files: {e}")
         
 if __name__ == '__main__':
     gd = GroupDivision()
     gd.graph2group(False, 0)
-    gd.merge_group(0, False)
+    gd.merge_group(0, is_sub=False)
     for i in range(3):
         divided_group = gd.find_overweighted_group()
+        print(divided_group)
         if(len(divided_group) == 0):
             break
         for g in divided_group:
+            gd.graph2group(True, g)
             gd.merge_group(g, True)
         gd.agg_file(divided_group)
         

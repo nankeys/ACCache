@@ -254,7 +254,7 @@ namespace eccache {
 
         //pthread_mutex_lock(&printmutex);
         char filename[255];
-        snprintf(filename, sizeof(filename), "d%dt%dp%04d", cpl.DAY, cpl.THREAD_NUM, ((thread_param *)param)->tid);
+        snprintf(filename, sizeof(filename), "t%02dd%dt%dp%04d", cpl.TRACE_NO, cpl.DAY, cpl.THREAD_NUM, ((thread_param *)param)->tid);
         //sprintf(filename, "d0t128p%04d", ((thread_param *)param)->tid);
         string fname = prefix + "/" + filename;
         //pthread_mutex_unlock(&printmutex);
@@ -292,6 +292,120 @@ namespace eccache {
                 fin.getline(line, 1000);
                 time_val = strtol(strtok(line, ","), NULL, 10); // time
                 qkeys.emplace_back(string(strtok(NULL, ",")));   //key
+                linenum++;
+            }
+            pthread_mutex_unlock(&printmutex);
+
+
+            for (int it = 0; it != linenum; it++) {
+                string rst;
+                bool flag;
+
+                tt.start();
+                int tloc = FreqSearch(keys, 0, keys.size(), qkeys[it]);
+                if(tloc != -1) {
+                    string ckeyt = stripe_key[tloc].ckey;
+                    for(int ii = 0; ii < 3; ii ++) {
+                        flag = mc.gget(ckeyt.c_str(), qkeys[it].c_str(), rst);
+                        if (!rst.empty() || flag) break;
+                    }
+                } else {
+                    for(int ii = 0; ii < 3; ii ++) {
+                        flag = mc.get(qkeys[it].c_str(), rst);
+                        if (!rst.empty() || flag) break;
+                    }
+                }
+                tt.end();
+
+                //tail latency
+                ((thread_param *) param)->latency.push(tt.passedtime());
+
+                if (((thread_param *) param)->latency.size() >= cpl.LATENCY_NUM) {
+                    ((thread_param *) param)->latency.pop();
+                }
+                //total running time
+                ((thread_param *) param)->runtime += tt.passedtime();
+                //sum ops
+                ((thread_param *) param)->ops++;
+                //sum size
+                ((thread_param *) param)->size += rst.size();
+            }
+            qkeys.clear();
+            vector<string>().swap(qkeys);
+        }
+        fin.close();
+
+        ((thread_param *) param)->thput_of_ops = ((thread_param *) param)->ops / ((thread_param *) param)->runtime;
+        ((thread_param *) param)->thput_of_size =
+                1.0 * ((thread_param *) param)->size / ((thread_param *) param)->runtime / 1024;
+
+        cout << "Total time: " << ((thread_param *) param)->runtime << endl
+             << "Total ops: " << ((thread_param *) param)->ops << endl
+             << "Total ops throughput: " << ((thread_param *) param)->thput_of_ops << endl
+             << "Total sizes: " << ((thread_param *) param)->size << endl
+             << "Total size throughput: " << ((thread_param *) param)->thput_of_size << " KB" << endl;
+
+
+        //free(line);
+        //memcached_server_list_free(server);
+        pthread_exit(NULL);
+    }
+
+    static void *meta_query_exec(void *param) {
+        timeit tt;
+        MemcachedClient mc(cpl.SERVER_INFO);
+
+        string prefix = cpl.PATH_PREFIX;
+
+        pthread_mutex_lock(&printmutex);
+        cout << ((thread_param *) param)->tid << ": meta_query_exec" << endl;
+        pthread_mutex_unlock(&printmutex);
+
+        //pthread_mutex_lock(&printmutex);
+        char filename[255];
+        snprintf(filename, sizeof(filename), "t%02dd%dt%dp%04d", cpl.TRACE_NO, cpl.DAY, cpl.THREAD_NUM, ((thread_param *)param)->tid);
+        //sprintf(filename, "d0t128p%04d", ((thread_param *)param)->tid);
+        string fname = prefix + "/" + filename;
+        //pthread_mutex_unlock(&printmutex);
+
+        //pthread_mutex_lock (&printmutex);
+        cout << ((thread_param *) param)->tid << ",filename = " << fname << endl;
+        //pthread_mutex_unlock (&printmutex);
+
+        //pthread_mutex_lock (&printmutex);
+        ifstream fin(fname);
+
+
+        if (!fin) {
+            cout << ((thread_param *) param)->tid << ": Error open trace file" << endl;
+            exit(-1);
+        }
+        //pthread_mutex_unlock (&printmutex);
+
+        pthread_mutex_lock(&printmutex);
+        fprintf(stderr, "start benching using thread%u\n", ((thread_param *) param)->tid);
+        pthread_mutex_unlock(&printmutex);
+
+
+        vector<string> qkeys;
+        while (fin.peek() != EOF) {
+
+            char line[1000];
+            size_t time_val;
+            char query_key[200];
+            int linenum;
+
+            pthread_mutex_lock(&printmutex);
+            linenum = 0;
+            while (fin.peek() != EOF and linenum != cpl.ONCE_READ_LIMIT) {
+                fin.getline(line, 1000);
+                if(cpl.TRACE_NO == 202206) {
+                    // time_val = strtol(strtok(line, ","), NULL, 10); // time
+                    qkeys.emplace_back(string(strtok(line, ",")));   //key
+                } else if(cpl.TRACE_NO == 202401) {
+                    time_val = strtol(strtok(line, ","), NULL, 10); // time
+                    qkeys.emplace_back(string(strtok(NULL, ",")));   //key
+                }
                 linenum++;
             }
             pthread_mutex_unlock(&printmutex);
@@ -493,7 +607,9 @@ namespace eccache {
             int rci;
             if (wtype == ibm) {
                 rci = pthread_create(&threads[t], &attr, ibm_query_exec, (void *) &tp[t]);
-            } else {
+            } else if(wtype == meta) {
+                rci = pthread_create(&threads[t], &attr, meta_query_exec, (void *) &tp[t]);
+            } else if(wtype == twitter) {
                 rci = pthread_create(&threads[t], &attr, twitter_query_exec, (void *) &tp[t]);
             }
             if (rci) {
@@ -547,7 +663,7 @@ namespace eccache {
              << "99\% latency: " << latency99 << endl
              << "99.99\% latency: " << latency9999 << endl;
 
-        ofstream fout("/data/result", ios::out|ios::app);
+        ofstream fout(cpl.PATH_PREFIX + "/result", ios::out|ios::app);
         //fout << snum << endl;
         fout << "ECCache" << "\t" << nthreads << "\t" << total_time << "\t" << total_ops << "\t" << total_ops_thputs << "\t"
              << total_size << "\t" << total_size_thputs << "\t"

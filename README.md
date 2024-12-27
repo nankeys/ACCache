@@ -47,7 +47,7 @@ python3 InformationCollection.py
 ### Preprocess
 ```shell
 # All the steps work under directory `Preproccess/`
-cd Preprocess
+cd ACCache/Preprocess
 ```
 
 1. Pre-process the trace files.
@@ -65,7 +65,7 @@ python3 thread_split.py
 ## Correalation Analysis
 1. Change the dir and rebuild
 ```shell
-cd src/_build
+cd ACCache/src/_build
 make -j
 ```
 
@@ -84,7 +84,7 @@ make
 ```
 -->
 ```shell
-wget https://master.dl.sourceforge.net/project/louvain/louvain-generic.tar.gz?viasf=1
+wget https://master.dl.sourceforge.net/project/louvain/louvain-generic.tar.gz
 tar -zvxf louvain-generic.tar.gz
 cd louvain-generic/
 make

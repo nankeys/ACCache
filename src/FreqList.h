@@ -9,6 +9,7 @@
 #include <list>
 #include "ListNode.h"
 
+
 class FreqList {
 public:
     int lengthLimit;

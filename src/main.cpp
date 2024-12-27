@@ -25,7 +25,7 @@ int main() {
 
         //AC-Cache
         OurScheme os(twitter);
-        os.distribute(fmt::format("{}/graph{{:02d}}_agg", gcp.PATH_PREFIX, gcp.TRACE_NO), gcp.GROUP_NUM, gcp.DAY);
+        os.distribute(fmt::format("{}/graph{:02d}_agg", gcp.PATH_PREFIX, gcp.TRACE_NO), gcp.GROUP_NUM, gcp.SERVER_NUM);
         os.query();
 
         auto stats = mca.get_stats();

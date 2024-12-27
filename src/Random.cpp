@@ -56,7 +56,7 @@ void *twitter_query_exec(void *param) {
     //pthread_mutex_lock(&printmutex);
     char filename[255];
     //sprintf(filename, "d0t%dp%04d", cp.THREAD_NUM, ((thread_param *)param)->tid);
-    snprintf(filename, sizeof(filename), "d%dt%dp%04d", cp.DAY, cp.THREAD_NUM, ((thread_param *)param)->tid);
+    snprintf(filename, sizeof(filename), "t%02dd%dt%dp%04d", cp.TRACE_NO, cp.DAY, cp.THREAD_NUM, ((thread_param *)param)->tid);
     //sprintf(filename, "d0t128p%04d", ((thread_param *)param)->tid);
     string fname = prefix + "/" + filename;
     //pthread_mutex_unlock(&printmutex);
@@ -173,6 +173,138 @@ void *twitter_query_exec(void *param) {
     pthread_exit(NULL);
 }
 
+void *meta_query_exec(void *param) {
+    timeit tt;
+    MemcachedClient mc(cp.SERVER_INFO);
+
+    string prefix = cp.PATH_PREFIX;
+
+    pthread_mutex_lock(&printmutex);
+    cout << ((thread_param *)param)->tid <<": meta_query_exec" << endl;
+    pthread_mutex_unlock(&printmutex);
+
+    //pthread_mutex_lock(&printmutex);
+    char filename[255];
+    //sprintf(filename, "d0t%dp%04d", cp.THREAD_NUM, ((thread_param *)param)->tid);
+    snprintf(filename, sizeof(filename), "t%02dd%dt%dp%04d", cp.TRACE_NO, cp.DAY, cp.THREAD_NUM, ((thread_param *)param)->tid);
+    //sprintf(filename, "d0t128p%04d", ((thread_param *)param)->tid);
+    string fname = prefix + "/" + filename;
+    //pthread_mutex_unlock(&printmutex);
+
+    //pthread_mutex_lock (&printmutex);
+    cout << ((thread_param *)param)->tid <<",filename = " << fname << endl;
+    //pthread_mutex_unlock (&printmutex);
+
+    //pthread_mutex_lock (&printmutex);
+    ifstream fin(fname);
+
+
+    if(!fin) {
+        cout <<  ((thread_param *)param)->tid <<": Error open trace file" << endl;
+        exit(-1);
+    }
+    //pthread_mutex_unlock (&printmutex);
+
+    pthread_mutex_lock (&printmutex);
+    fprintf(stderr, "start benching using thread%u\n", ((thread_param *)param)->tid);
+    pthread_mutex_unlock (&printmutex);
+
+
+    vector<string> qkeys;
+    vector<string> ops;
+    while(fin.peek() != EOF) {
+
+        char line[1000];
+        long time_val;
+        char query_key[200];
+        int linenum;
+
+        pthread_mutex_lock (&printmutex);
+        linenum = 0;
+        while(fin.peek() != EOF and linenum != cp.ONCE_READ_LIMIT) {
+            fin.getline(line, 1000);
+            if(cp.TRACE_NO == 202206) {
+                // time_val = strtol(strtok(line, ","), NULL, 10); // time
+                qkeys.emplace_back(string(strtok(line, ",")));   //key
+            } else if(cp.TRACE_NO == 202401) {
+                time_val = strtol(strtok(line, ","), NULL, 10); // time
+                qkeys.emplace_back(string(strtok(NULL, ",")));   //key
+            }
+            linenum ++;
+        }
+        pthread_mutex_unlock (&printmutex);
+
+
+        for(int it = 0; it != linenum; it ++) {
+            string rst;
+            bool flag;
+
+            tt.start();
+//            if (ops[it] == "set") {
+//                flag = mc.insert(qkeys[it].c_str(), "1111");
+//            } else {
+                for(int ii = 0; ii < 3; ii ++) {//while (true) {
+                    flag = mc.get(qkeys[it].c_str(), rst);
+                    if (!rst.empty()) break;
+                }
+            //}
+            tt.end();
+
+            //tail latency
+            /*int left = 0;
+            int right = ((thread_param *) param)->latency.size() - 1;
+            int mid = 0;
+            //找a[i]应该插入的位置
+            while (left <= right) {
+                mid = (left + right) / 2;
+                if (tt.passedtime() < ((thread_param *) param)->latency[mid]) {
+                    left = mid + 1;
+                } else {
+                    right = mid + -1;
+                }
+            }
+            ((thread_param *) param)->latency.emplace(((thread_param *) param)->latency.begin()+left, tt.passedtime());*/
+            ((thread_param *) param)->latency.push(tt.passedtime());
+            /*auto pr = ((thread_param *) param)->latency.begin();
+            for (; pr != ((thread_param *) param)->latency.end(); pr++) {
+                if (tt.passedtime() >= *pr) {
+                    break;
+                }
+            }
+            ((thread_param *) param)->latency.emplace(pr, tt.passedtime());*/
+            if (((thread_param *) param)->latency.size() >= cp.LATENCY_NUM) {
+               // ((thread_param *) param)->latency.pop_back();
+               // ((thread_param *) param)->latency.shrink_to_fit();
+                ((thread_param *) param)->latency.pop();
+            }
+            //total running time
+            ((thread_param *) param)->runtime += tt.passedtime();
+            //sum ops
+            ((thread_param *) param)->ops++;
+            //sum size
+            ((thread_param *) param)->size += rst.size();
+        }
+        qkeys.clear();
+        vector<string>().swap(qkeys);
+    }
+    fin.close();
+
+    ((thread_param *)param)->thput_of_ops = ((thread_param *)param)->ops / ((thread_param *)param)->runtime;
+    ((thread_param *)param)->thput_of_size = 1.0 * ((thread_param *)param)->size / ((thread_param *)param)->runtime / 1024;
+
+    cout << "Total time: " << ((thread_param *)param)->runtime << endl
+         << "Total ops: " << ((thread_param *)param)->ops << endl
+         << "Total ops throughput: " << ((thread_param *)param)->thput_of_ops << endl
+         << "Total sizes: " << ((thread_param *)param)->size << endl
+         << "Total size throughput: " << ((thread_param *)param)->thput_of_size << " KB" << endl;
+
+
+    //free(line);
+    //memcached_server_list_free(server);
+    pthread_exit(NULL);
+}
+
+
 void *ibm_query_exec(void *param) {
     return nullptr;
 }
@@ -206,8 +338,8 @@ void random_test(const workload_type& type, const int& snum) {
         int rci;
         if(wt == twitter) {
             rci = pthread_create(&threads[t], &attr, twitter_query_exec, (void *) &tp[t]);
-        } else {
-            rci = pthread_create(&threads[t], &attr, ibm_query_exec, (void *) &tp[t]);
+        } else if(wt == meta) {
+            rci = pthread_create(&threads[t], &attr, meta_query_exec, (void *) &tp[t]);
         }
         if (rci) {
             perror("failed: pthread_create\n");
@@ -261,7 +393,7 @@ void random_test(const workload_type& type, const int& snum) {
          << "99\% latency: " << latency99 *1000 << endl
          << "99.99\% latency: " << latency9999 *1000 << endl;
 
-    ofstream fout("/data/result", ios::out|ios::app);
+    ofstream fout(cp.PATH_PREFIX + "/data/result", ios::out|ios::app);
     //fout << snum << endl;
     fout << "Random" << "\t" << nthreads << "\t" << total_time << "\t" <<  total_ops << "\t" << total_ops_thputs << "\t"
          << total_size << "\t" << total_size_thputs << "\t"

@@ -20,6 +20,7 @@ namespace eccache {
     void test(const ConfigParameter& cp, const int& snum);
 
     static void *twitter_query_exec(void* param);
+    static void *meta_query_exec(void* param);
     static void *ibm_query_exec(void* param);
     void ibm_distribution();
     void twitter_distribution();

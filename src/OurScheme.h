@@ -8,6 +8,7 @@
 #include "config.h"
 //#include "CMSketch.h"
 #include "FreqTable.h"
+#include "buffer.h"
 #include <set>
 
 class OurScheme {

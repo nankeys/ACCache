@@ -83,20 +83,21 @@ void FreqTable::write2File(const string &filename) {
 }
 
 void FreqTable::write4louvain(const std::string& filename) {
-    ofstream fout(filename);
+    try {
+        BufferedWriter writer(filename, 1024);
 
-    if(!fout.is_open()) {
-        cout << "Error opening files!" << endl;
-        exit(-1);
-    }
-
-    for(int i = 0; i != n; i ++) {
-        for(int j = i + 1; j != n; j ++) {
-            fout << i << "\t" << j << "\t" << find(i, j) << endl;
+        for(int i = 0; i != n; i ++) {
+            for(int j = i + 1; j != n; j ++) {
+                int res = find(i, j);
+                if(res == 0) continue;
+                writer.write(to_string(i) + "\t" + to_string(j) + "\t" + to_string(res) + "\n");
         }
     }
 
-    fout.close();
+        // 析构时会自动 flush 数据
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
 }
 
 void FreqTable::load(const string &filename) {
